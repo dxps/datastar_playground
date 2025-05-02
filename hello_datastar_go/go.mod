@@ -1,4 +1,4 @@
-module github.com/dxps/datastar_playground/hello_datastar
+module github.com/dxps/datastar_playground/hello_datastar_go
 
 go 1.24.2
 
@@ -15,7 +15,7 @@ require (
 	github.com/goccy/go-json v0.10.5 // indirect
 	github.com/igrmk/treemap/v2 v2.0.1 // indirect
 	github.com/klauspost/compress v1.18.0 // indirect
-	github.com/samber/lo v1.49.1 // indirect
+	github.com/samber/lo v1.50.0 // indirect
 	github.com/valyala/bytebufferpool v1.0.0 // indirect
 	golang.org/x/exp v0.0.0-20250408133849-7e4ce0ab07d0 // indirect
 	golang.org/x/text v0.24.0 // indirect
