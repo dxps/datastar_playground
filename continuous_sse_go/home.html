@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <title>Continuous SSE | Datastar Demo</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0" />
+    <script type="module" defer
+        src="https://cdn.jsdelivr.net/gh/starfederation/datastar@v1.0.0-beta.11/bundles/datastar.js"></script>
+</head>
+
+<body
+    style="display:flex;flex-direction:column;background-color:oklch(25.3267% 0.015896 252.417568);height:100vh;justify-content:center;align-items:center;font-family:ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';">
+    <span id="feed" data-on-load="@get('/stream')"></span>
+</body>
+
+</html>
