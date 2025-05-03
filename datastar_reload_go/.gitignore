@@ -1,0 +1,7 @@
+
+## The temporary space while running in "dev mode" (restart and reload on changes).
+.tmp
+
+## The executable of this project (the result of the default `go build`).
+main
+

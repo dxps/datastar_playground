@@ -25,10 +25,12 @@ func HotReloadHandler(w http.ResponseWriter, r *http.Request) {
 	hotReloadOnlyOnce.Do(func() {
 		// Refresh the client page as soon as connection is established.
 		// This will occur only once after the server starts.
-		sse.ExecuteScript(
+		if err := sse.ExecuteScript(
 			"window.location.reload()",
 			datastar.WithExecuteScriptRetryDuration(time.Second),
-		)
+		); err != nil {
+			slog.Error("Failed to execute script.", "error", err)
+		}
 	})
 	// Freeze the event stream until the connection
 	// is lost for any reason. This will force the client
@@ -41,17 +43,11 @@ func PageWithHotReload(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
-	//
 	http.HandleFunc("/hotreload", HotReloadHandler)
 	http.HandleFunc("/", PageWithHotReload)
 	slog.Info(fmt.Sprintf(
 		"Open your browser to: http://%s/",
 		serverAddress,
 	))
-	http.ListenAndServe(serverAddress, nil)
-
-	// Tip: read the reflex documentation to see advanced usage
-	// options like responding to specific file changes by filter.
-	//
-	// $ reflex --help
+	_ = http.ListenAndServe(serverAddress, nil)
 }
