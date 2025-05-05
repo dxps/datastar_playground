@@ -35,8 +35,14 @@ func setupExamplesTemplCounter(router chi.Router, sessionSignals sessions.Store)
 
 	fs := http.FileServer(http.Dir("static"))
 	router.Handle("/static/*", http.StripPrefix("/static/", fs))
-	router.Get("/", handlers.HomeGetHandler)
-	router.Get("/counter", handlers.CounterGetHandler)
+
+	router.Get("/", func(w http.ResponseWriter, r *http.Request) {
+		handlers.RenderView(w, r, components.HomeView("hello, Datastar Counter!"), "/")
+	})
+
+	router.Get("/counter", func(w http.ResponseWriter, r *http.Request) {
+		handlers.RenderView(w, r, components.CounterView(0, 0), "/counter")
+	})
 
 	var globalCounter atomic.Uint32
 	const (
@@ -44,7 +50,7 @@ func setupExamplesTemplCounter(router chi.Router, sessionSignals sessions.Store)
 		countKey   = "count"
 	)
 
-	userVal := func(r *http.Request) (uint32, *sessions.Session, error) {
+	sessFunc := func(r *http.Request) (uint32, *sessions.Session, error) {
 		sess, err := sessionSignals.Get(r, sessionKey)
 		if err != nil {
 			return 0, nil, err
@@ -57,15 +63,15 @@ func setupExamplesTemplCounter(router chi.Router, sessionSignals sessions.Store)
 		return val, sess, nil
 	}
 
-	router.Get("/counter/data", func(w http.ResponseWriter, r *http.Request) {
-		userVal, _, err := userVal(r)
+	router.Get("/counter/get", func(w http.ResponseWriter, r *http.Request) {
+		sessVal, _, err := sessFunc(r)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
 
 		signals := components.TemplCounterSignals{
-			Global: globalCounter.Load(),
-			User:   userVal,
+			Global:  globalCounter.Load(),
+			Session: sessVal,
 		}
 
 		c := components.TemplCounterExampleInitialContents(signals)
@@ -80,7 +86,7 @@ func setupExamplesTemplCounter(router chi.Router, sessionSignals sessions.Store)
 		}
 	}
 
-	router.Route("/templ_counter/increment", func(incrementRouter chi.Router) {
+	router.Route("/counter/increment", func(incrementRouter chi.Router) {
 		incrementRouter.Post("/global", func(w http.ResponseWriter, r *http.Request) {
 			update := gabs.New()
 			updateGlobal(update)
@@ -90,8 +96,8 @@ func setupExamplesTemplCounter(router chi.Router, sessionSignals sessions.Store)
 			}
 		})
 
-		incrementRouter.Post("/user", func(w http.ResponseWriter, r *http.Request) {
-			val, sess, err := userVal(r)
+		incrementRouter.Post("/session", func(w http.ResponseWriter, r *http.Request) {
+			val, sess, err := sessFunc(r)
 			if err != nil {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 			}
