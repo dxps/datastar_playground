@@ -1,0 +1,74 @@
+package comps
+
+import datastar "github.com/starfederation/datastar/sdk/go"
+
+type CountersSignals struct {
+	Global  int32 `json:"global"`
+	Session int32 `json:"session"`
+}
+
+templ CountersButtons() {
+	<div>
+		<button data-on-click="@post('/counter/increment/global')">
+			Increment Global
+		</button>
+		<button data-on-click={ datastar.PostSSE("/counter/increment/session") }>
+			Increment Session
+		</button>
+	</div>
+}
+
+templ CountersView() {
+	<div>
+		<div>
+			<div>Global</div>
+			<div data-text="$global"></div>
+		</div>
+		<div>
+			<div>Session</div>
+			<div data-text="$session"></div>
+		</div>
+	</div>
+}
+
+templ CountersInitialView(signals CountersSignals) {
+	<div
+		id="container"
+		data-signals={ templ.JSONString(signals) }
+	>
+		@CountersButtons()
+		@CountersView()
+	</div>
+}
+
+templ Page(signals CountersSignals) {
+	<!DOCTYPE html>
+	<html>
+		<head>
+			<meta charset="UTF-8"/>
+			<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+			<title>Counter sample w/ datastar + go + templ</title>
+			<link rel="stylesheet" href="/assets/css/bulma.min.css"/>
+			<link rel="icon" type="image/x-icon" href="/assets/images/favicon.ico"/>
+			<script type="module" src="/assets/js/datastar.js"></script>
+		</head>
+		<body class="bg-gray-100">
+			<header class="hero is-primary">
+				<div class="hero-body">
+					<div>
+						<h1 class="title">Counter sample w/ datastar + go + templ</h1>
+					</div>
+				</div>
+			</header>
+			<section class="section">
+				<div class="container">
+					<div class="columns is-centered">
+						<div class="column is-half">
+							@CountersInitialView(signals)
+						</div>
+					</div>
+				</div>
+			</section>
+		</body>
+	</html>
+}
