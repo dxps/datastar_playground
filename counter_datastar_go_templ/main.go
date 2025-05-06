@@ -2,9 +2,9 @@ package main
 
 import (
 	"fmt"
-	"log"
 	"log/slog"
 	"net/http"
+	"os"
 	"time"
 
 	"github.com/Jeffail/gabs/v2"
@@ -18,8 +18,8 @@ type GlobalState struct {
 }
 
 const (
-	CountKey   = "count"
-	SessionKey = "session_count"
+	CountKey        = "count"
+	SessionCountKey = "session_count"
 )
 
 var (
@@ -27,46 +27,36 @@ var (
 	sessionManager *scs.SessionManager
 )
 
-func getHandler(w http.ResponseWriter, r *http.Request) {
-	sessCount := sessionManager.GetInt32(r.Context(), CountKey)
-	signals := comps.CountersSignals{
-		Global:  global.Count,
-		Session: sessCount,
-	}
-	component := comps.Page(signals)
-	_ = component.Render(r.Context(), w)
-}
-
-func postHandler(w http.ResponseWriter, r *http.Request) {
-	_ = r.ParseForm()         // Update state.
-	if r.Form.Has("global") { // If Global button was pressed.
-		global.Count++
-	}
-	if r.Form.Has("session") { // If Session button was pressed.
-		currentCount := sessionManager.GetInt(r.Context(), "count")
-		sessionManager.Put(r.Context(), "count", currentCount+1)
-	}
-	getHandler(w, r) // Display the form.
-}
-
 func main() {
+
+	slog.SetDefault(
+		slog.New(
+			slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelDebug}),
+		),
+	)
+
 	sessionManager = scs.New()
 	sessionManager.Lifetime = 24 * time.Hour
 
 	mux := http.NewServeMux()
 
-	// Handle POST and GET requests.
 	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		if r.Method == http.MethodPost {
-			postHandler(w, r)
-			return
+		sessCount := sessionManager.GetInt32(r.Context(), CountKey)
+		signals := comps.CountersSignals{
+			Global:  global.Count,
+			Session: sessCount,
 		}
-		getHandler(w, r)
+		sessionManager.Put(r.Context(), SessionCountKey, sessCount)
+		slog.Debug(fmt.Sprintf("Initial session count is %d.", sessCount))
+		component := comps.Page(signals)
+		_ = component.Render(r.Context(), w)
 	})
 
 	//
 	mux.HandleFunc("/counter/increment/global", func(w http.ResponseWriter, r *http.Request) {
+
 		global.Count++
+		slog.Debug(fmt.Sprintf("Updated global count to %d.", global.Count))
 		upd := gabs.New()
 		if _, err := upd.Set(global.Count, "global"); err != nil {
 			slog.Error("Failed to update global count", "error", err)
@@ -78,9 +68,9 @@ func main() {
 
 	mux.HandleFunc("/counter/increment/session", func(w http.ResponseWriter, r *http.Request) {
 
-		sessCount := sessionManager.GetInt(r.Context(), SessionKey)
-		sessionManager.Put(r.Context(), SessionKey, sessCount+1)
-
+		sessCount := sessionManager.GetInt(r.Context(), SessionCountKey)
+		sessionManager.Put(r.Context(), SessionCountKey, sessCount+1)
+		slog.Debug(fmt.Sprintf("Updated session count to %d.", sessCount+1))
 		upd := gabs.New()
 		if _, err := upd.Set(sessCount, "session"); err != nil {
 			slog.Error("Failed to update session", "error", err)
@@ -99,6 +89,6 @@ func main() {
 	// Start the server.
 	fmt.Println("Listening on :9000 ...")
 	if err := http.ListenAndServe("127.0.0.1:9000", muxWithSessionMiddleware); err != nil {
-		log.Printf("error listening: %v", err)
+		slog.Error("Failed to listen.", "error", err)
 	}
 }
