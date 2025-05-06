@@ -66,15 +66,28 @@ func main() {
 
 	//
 	mux.HandleFunc("/counter/increment/global", func(w http.ResponseWriter, r *http.Request) {
-		upd := gabs.New()
 		global.Count++
-		if _, err := upd.Set(global, "global"); err != nil {
-			slog.Error("Failed to update global", "error", err)
+		upd := gabs.New()
+		if _, err := upd.Set(global.Count, "global"); err != nil {
+			slog.Error("Failed to update global count", "error", err)
 		}
 		if err := datastar.NewSSE(w, r).MarshalAndMergeSignals(upd); err != nil {
-			slog.Error("Failed to MarshalAndMergeSignals", "error", err)
+			slog.Error("Failed to MarshalAndMergeSignals w/ global count update", "error", err)
 		}
-		slog.Info("Updated global count", "value", global.Count)
+	})
+
+	mux.HandleFunc("/counter/increment/session", func(w http.ResponseWriter, r *http.Request) {
+
+		sessCount := sessionManager.GetInt(r.Context(), SessionKey)
+		sessionManager.Put(r.Context(), SessionKey, sessCount+1)
+
+		upd := gabs.New()
+		if _, err := upd.Set(sessCount, "session"); err != nil {
+			slog.Error("Failed to update session", "error", err)
+		}
+		if err := datastar.NewSSE(w, r).MarshalAndMergeSignals(upd); err != nil {
+			slog.Error("Failed to MarshalAndMergeSignals w/ session count update", "error", err)
+		}
 	})
 
 	// Include the static content.
