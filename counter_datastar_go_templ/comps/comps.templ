@@ -35,6 +35,7 @@ templ CountersInitialView(signals CountersSignals) {
 	<div
 		id="container"
 		data-signals={ templ.JSONString(signals) }
+		data-persist__session
 	>
 		@CountersButtons()
 		@CountersView()
