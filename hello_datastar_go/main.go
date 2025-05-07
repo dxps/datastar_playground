@@ -22,7 +22,7 @@ func main() {
 	}
 
 	r.Get("/", func(w http.ResponseWriter, r *http.Request) {
-		w.Write(helloWorldHTML)
+		_, _ = w.Write(helloWorldHTML)
 	})
 
 	r.Get("/hello-world", func(w http.ResponseWriter, r *http.Request) {
@@ -35,11 +35,15 @@ func main() {
 		sse := datastar.NewSSE(w, r)
 
 		for i := 0; i < len(message); i++ {
-			sse.MergeFragments(`<div id="message">` + message[:i+1] + `</div>`)
+			if err := sse.MergeFragments(`<div id="message">` + message[:i+1] + `</div>`); err != nil {
+				slog.Error("Failed on MergeFragments", "error", err)
+			}
 			time.Sleep(store.Delay * time.Millisecond)
 		}
 	})
 
-	slog.Info("Listening on :8080 ...")
-	http.ListenAndServe(":8080", r)
+	slog.Info("Listening on :9001 ...")
+	if err := http.ListenAndServe(":9001", r); err != nil {
+		slog.Error("Failed to listen", "error", err)
+	}
 }
