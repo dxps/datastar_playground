@@ -2,4 +2,4 @@
 .tmp
 
 ## The executable of this project (the result of the default `go build`).
-main
+counter_datastar_go_templ

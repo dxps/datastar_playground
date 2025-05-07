@@ -1,12 +1,12 @@
-module github.com/dxps/htmx_playground/counter_htmx_go_templ
+module github.com/dxps/htmx_playground/counter_datastar_go_templ
 
 go 1.24.2
 
 require (
+	github.com/Jeffail/gabs/v2 v2.7.0
 	github.com/a-h/templ v0.3.865
 	github.com/alexedwards/scs/v2 v2.8.0
 	github.com/starfederation/datastar v1.0.0-beta.11
-	github.com/Jeffail/gabs/v2 v2.7.0
 )
 
 require (

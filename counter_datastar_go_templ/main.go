@@ -9,7 +9,7 @@ import (
 
 	"github.com/Jeffail/gabs/v2"
 	"github.com/alexedwards/scs/v2"
-	"github.com/dxps/htmx_playground/counter_htmx_go_templ/comps"
+	"github.com/dxps/htmx_playground/counter_datastar_go_templ/comps"
 	datastar "github.com/starfederation/datastar/sdk/go"
 )
 
