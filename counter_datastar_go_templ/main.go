@@ -41,18 +41,18 @@ func main() {
 	mux := http.NewServeMux()
 
 	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		sessCount := sessionManager.GetInt32(r.Context(), CountKey)
+
+		sc := sessionManager.GetInt32(r.Context(), SessionCountKey)
 		signals := comps.CountersSignals{
 			Global:  global.Count,
-			Session: sessCount,
+			Session: sc,
 		}
-		sessionManager.Put(r.Context(), SessionCountKey, sessCount)
-		slog.Debug(fmt.Sprintf("Initial session count is %d.", sessCount))
+		sessionManager.Put(r.Context(), SessionCountKey, sc)
+		slog.Debug(fmt.Sprintf("On initial access, session count is %d.", sc))
 		component := comps.Page(signals)
 		_ = component.Render(r.Context(), w)
 	})
 
-	//
 	mux.HandleFunc("/counter/increment/global", func(w http.ResponseWriter, r *http.Request) {
 
 		global.Count++
@@ -68,11 +68,15 @@ func main() {
 
 	mux.HandleFunc("/counter/increment/session", func(w http.ResponseWriter, r *http.Request) {
 
-		sessCount := sessionManager.GetInt(r.Context(), SessionCountKey)
-		sessionManager.Put(r.Context(), SessionCountKey, sessCount+1)
-		slog.Debug(fmt.Sprintf("Updated session count to %d.", sessCount+1))
+		if !sessionManager.Exists(r.Context(), SessionCountKey) {
+			slog.Warn(fmt.Sprintf("%s key not found in the current session", SessionCountKey))
+		}
+		sc := sessionManager.GetInt32(r.Context(), SessionCountKey)
+		usc := sc + 1
+		sessionManager.Put(r.Context(), SessionCountKey, usc)
+		slog.Debug(fmt.Sprintf("Updated session count to %d.", usc))
 		upd := gabs.New()
-		if _, err := upd.Set(sessCount, "session"); err != nil {
+		if _, err := upd.Set(usc, "session"); err != nil {
 			slog.Error("Failed to update session", "error", err)
 		}
 		if err := datastar.NewSSE(w, r).MarshalAndMergeSignals(upd); err != nil {
@@ -80,7 +84,7 @@ func main() {
 		}
 	})
 
-	// Include the static content.
+	// Include the static assets.
 	mux.Handle("/assets/", http.StripPrefix("/assets/", http.FileServer(http.Dir("assets"))))
 
 	// Add the middleware.
