@@ -4,6 +4,12 @@ A minimal implementation of a counter using [htmx](https://htmx.org/), [go](http
 
 <br/>
 
+### Prerequisites
+
+-   [templ](https://templ.guide/) - installable using `go install github.com/a-h/templ/cmd/templ@latest`
+
+<br/>
+
 ### Usage
 
 Use `./run.sh` to have it started in "dev mode" (it is restarted on detected code/file changes).
